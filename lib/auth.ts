@@ -22,7 +22,7 @@ export const authOptions: NextAuthOptions = {
           const user = await User.findOne({ email: credentials.email });
 
           if (!user) {
-            throw new Error("No user found with this");
+            throw new Error("No user found with this email");
           }
 
           const isValid = await bcrypt.compare(
@@ -31,12 +31,14 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!isValid) {
-            throw new Error("invalid password");
+            throw new Error("Invalid password");
           }
 
           return {
             id: user._id.toString(),
             email: user.email,
+            username: user.username,
+            profilePicture: user.profilePicture,
           };
         } catch (error) {
           console.error("Auth error: ", error);
@@ -49,12 +51,16 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.username = user.username;
+        token.profilePicture = user.profilePicture;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.username = token.username as string;
+        session.user.profilePicture = token.profilePicture as string;
       }
       return session;
     },
